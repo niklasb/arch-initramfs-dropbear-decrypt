@@ -1,0 +1,35 @@
+#!/bin/sh
+
+try_decrypt() {
+  local password dev name
+
+  echo -n " => Password: "
+  /bin/stty -echo
+  read password
+  /bin/stty echo
+  echo
+
+  cat /.crypt | while read line; do
+    dev=$(echo "$line" | cut -d":" -f 1)
+    name=$(echo "$line" | cut -d":" -f 2)
+
+    echo "Decrypting $dev as $name..."
+    echo -n "$password" | /sbin/cryptsetup -d - luksOpen "$dev" "$name" 2>/dev/null
+    if [ $? -ne 0 ]; then
+      killall cryptsetup
+      return 1
+    fi
+  done
+
+  return 0
+}
+
+[ -e /.crypt ] || echo "Waiting for encrypt hook to be executed..."
+while [ ! -e /.crypt ]; do sleep 1; done
+
+echo "Decrypting volumes..."
+while ! try_decrypt; do
+  echo >&2 "Wrong passphrase! Retrying..."
+done
+
+rm /.crypt

@@ -1,0 +1,10 @@
+# vim: set ft=sh
+
+run_hook ()
+{
+    [ -d /dev/pts ] || mkdir -p /dev/pts
+    mount -t devpts none /dev/pts 2>/dev/null
+
+    echo "Starting dropbear ssh server on port 222."
+    /usr/sbin/dropbear -E -p 222
+}

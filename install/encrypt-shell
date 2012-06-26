@@ -1,0 +1,46 @@
+# vim: set ft=sh:
+
+change_root_shell() {
+    # remove root user entry if existing and add new
+    [ -e "$1" ] && sed '/^root:/d' -i "$1"
+    echo "root:x:0:0:root:/:$2" >> "$1"
+}
+
+build ()
+{
+    local mod
+
+    add_module dm-crypt
+    if [[ $CRYPTO_MODULES ]]; then
+        for mod in $CRYPTO_MODULES; do
+            add_module "$mod"
+        done
+    else
+        add_all_modules "/crypto/"
+    fi
+
+    add_binary "cryptsetup"
+    add_binary "dmsetup"
+    add_file "/usr/lib/udev/rules.d/10-dm.rules"
+    add_file "/usr/lib/udev/rules.d/13-dm-disk.rules"
+    add_file "/usr/lib/udev/rules.d/95-dm-notify.rules"
+    add_file "/usr/lib/initcpio/udev/11-dm-initramfs.rules" "/usr/lib/udev/rules.d/11-dm-initramfs.rules"
+
+    # configure /bin/cryptsetup_shell as root shell
+    add_binary "/lib/initcpio/cryptsetup_shell" "/bin/cryptsetup_shell"
+
+    change_root_shell "${BUILDROOT}/etc/passwd" "/bin/cryptsetup_shell"
+    echo '/bin/cryptsetup_shell' >> "${BUILDROOT}"/etc/shells
+
+    # utility needed by decrypt script
+    add_binary "/bin/stty"
+
+    add_runscript
+}
+
+help ()
+{
+cat<<HELPEOF
+  This hook allows for an encrypted root device that can be unlocked via remote login.
+HELPEOF
+}

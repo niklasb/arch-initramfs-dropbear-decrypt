@@ -1,0 +1,63 @@
+# vim: set ft=sh:
+
+get_fingerprint() {
+    local keyfile="$1"
+    dropbearkey -y -f "${keyfile}" | sed -n '/^Fingerprint:/ {s/Fingerprint: *//; p}'
+}
+
+display_fingerprints() {
+    local keyfile
+
+    for keyfile in "/etc/dropbear/dropbear_dss_host_key" "/etc/dropbear/dropbear_rsa_host_key" ; do
+        if [ ! -r "${keyfile}" ] ; then
+            return 1
+        fi
+        echo "$(basename "${keyfile}") : $(get_fingerprint "${keyfile}")"
+    done
+}
+
+generate_keys() {
+    local keyfile keytype
+    for keytype in dss rsa ; do
+        keyfile="/etc/dropbear/dropbear_${keytype}_host_key"
+        echo "Generating ${keytype} host key for dropbear ..."
+        dropbearkey -t "${keytype}" -f "${keyfile}"
+    done
+}
+
+build ()
+{
+    if [ ! -e "/etc/dropbear/root_key" ]; then
+        echo "/etc/dropbear/root_key not found!"
+        exit 1
+    fi
+
+    umask 0022
+
+    [ -d /etc/dropbear ] && mkdir -p /etc/dropbear
+
+    display_fingerprints || generate_keys
+
+    BINARIES="/bin/rm /usr/sbin/dropbear /usr/bin/killall"
+
+    add_dir "/.ssh"
+    cat /etc/dropbear/root_key >> "${BUILDROOT}"/.ssh/authorized_keys
+
+    add_dir "/etc/dropbear"
+    add_file "/etc/dropbear/dropbear_rsa_host_key"
+    add_file "/etc/dropbear/dropbear_dss_host_key"
+    add_file "/lib/libnss_files.so.2"
+    add_dir "/var/run"
+
+    add_dir "/var/log"
+    touch "${BUILDROOT}"/var/log/lastlog
+
+    SCRIPT="dropbear-custom"
+}
+
+help ()
+{
+cat<<HELPEOF
+  This hook starts dropbear on startup, only accepting the configured client key.
+HELPEOF
+}
