@@ -25,13 +25,14 @@ build ()
     add_file "/usr/lib/initcpio/udev/11-dm-initramfs.rules" "/usr/lib/udev/rules.d/11-dm-initramfs.rules"
 
     # configure /bin/cryptsetup_shell as root shell
-    add_binary "/lib/initcpio/cryptsetup_shell" "/bin/cryptsetup_shell"
+    add_binary "/usr/lib/initcpio/cryptsetup_shell" "/bin/cryptsetup_shell"
 
     change_root_shell "${BUILDROOT}/etc/passwd" "/bin/cryptsetup_shell"
     echo '/bin/cryptsetup_shell' >> "${BUILDROOT}"/etc/shells
 
-    # utility needed by decrypt script
+    # utilities needed by decrypt script
     add_binary "/bin/stty"
+    add_binary "/usr/bin/killall"
 
     add_runscript
 }

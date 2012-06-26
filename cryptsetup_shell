@@ -14,11 +14,8 @@ try_decrypt() {
     name=$(echo "$line" | cut -d":" -f 2)
 
     echo "Decrypting $dev as $name..."
-    echo -n "$password" | /sbin/cryptsetup -d - luksOpen "$dev" "$name" 2>/dev/null
-    if [ $? -ne 0 ]; then
-      killall cryptsetup
-      return 1
-    fi
+    echo -n "$password" | \
+        /sbin/cryptsetup -d - luksOpen "$dev" "$name" 2>/dev/null || return 1
   done
 
   return 0
@@ -33,3 +30,4 @@ while ! try_decrypt; do
 done
 
 rm /.crypt
+killall -9 dropbear

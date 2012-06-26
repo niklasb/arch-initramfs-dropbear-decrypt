@@ -36,7 +36,8 @@ build ()
 
     display_fingerprints || generate_keys
 
-    BINARIES="/bin/rm /usr/sbin/dropbear /usr/bin/killall"
+    add_binary "/bin/rm"
+    add_binary "/usr/sbin/dropbear"
 
     add_dir "/.ssh"
     cat /etc/dropbear/root_key >> "${BUILDROOT}"/.ssh/authorized_keys
@@ -50,7 +51,7 @@ build ()
     add_dir "/var/log"
     touch "${BUILDROOT}"/var/log/lastlog
 
-    SCRIPT="dropbear-custom"
+    add_runscript
 }
 
 help ()
