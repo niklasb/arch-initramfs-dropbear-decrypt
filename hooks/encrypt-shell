@@ -1,6 +1,3 @@
-# vim: set ft=sh:
-# TODO this one needs some work to work with lots of different
-#       encryption schemes
 run_hook ()
 {
     /sbin/modprobe -a -q dm-crypt >/dev/null 2>&1

@@ -1,5 +1,3 @@
-# vim: set ft=sh:
-
 change_root_shell() {
     # remove root user entry if existing and add new
     [ -e "$1" ] && sed '/^root:/d' -i "$1"

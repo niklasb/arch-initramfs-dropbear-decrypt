@@ -1,5 +1,3 @@
-# vim: set ft=sh:
-
 get_fingerprint() {
     local keyfile="$1"
     dropbearkey -y -f "${keyfile}" | sed -n '/^Fingerprint:/ {s/Fingerprint: *//; p}'
